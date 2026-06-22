@@ -1,0 +1,15 @@
+{
+  "name": "arc-tabs",
+  "version": "0.1.0",
+  "description": "Auto-close inactive tabs after 12 hours — like Arc browser",
+  "type": "module",
+  "scripts": {
+    "dev": "vite build --watch",
+    "build": "vite build",
+    "clean": "rm -rf dist"
+  },
+  "devDependencies": {
+    "typescript": "^5.7.0",
+    "vite": "^6.3.0"
+  }
+}

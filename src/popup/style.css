@@ -1,0 +1,685 @@
+/* ─── Reset & Base ─────────────────────────────────────────────────── */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+:root {
+  --bg: #0f0f11;
+  --surface: #1a1a1f;
+  --surface-hover: #242429;
+  --border: #2a2a30;
+  --text: #e4e4e7;
+  --text-dim: #71717a;
+  --accent: #8b5cf6;
+  --accent-hover: #7c3aed;
+  --danger: #ef4444;
+  --keep: #22c55e;
+  --snooze: #f59e0b;
+  --radius: 8px;
+  --radius-sm: 6px;
+}
+
+body {
+  width: 380px;
+  min-height: 280px;
+  max-height: 560px;
+  overflow-y: auto;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  font-size: 13px;
+  color: var(--text);
+  background: var(--bg);
+}
+
+.hidden {
+  display: none !important;
+}
+
+/* ─── Header ──────────────────────────────────────────────────────── */
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 14px;
+  border-bottom: 1px solid var(--border);
+  position: sticky;
+  top: 0;
+  background: var(--bg);
+  z-index: 10;
+}
+
+.header-left {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.header-right {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.logo {
+  width: 20px;
+  height: 20px;
+  border-radius: 4px;
+}
+
+.header h1 {
+  font-size: 14px;
+  font-weight: 600;
+  letter-spacing: -0.3px;
+}
+
+.btn-icon {
+  background: none;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 5px;
+  cursor: pointer;
+  color: var(--text-dim);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.15s ease;
+}
+.btn-icon:hover {
+  background: var(--surface-hover);
+  color: var(--accent);
+  border-color: var(--accent);
+}
+.btn-icon svg {
+  display: block;
+}
+
+/* ─── Sections ────────────────────────────────────────────────────── */
+.section {
+  padding: 10px 14px;
+}
+
+.section + .section {
+  border-top: 1px solid var(--border);
+}
+
+.section-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 8px;
+}
+
+.section-title {
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--text-dim);
+  margin-bottom: 0;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.section-title svg {
+  flex-shrink: 0;
+  color: var(--accent);
+}
+
+.section-desc {
+  font-size: 11px;
+  color: var(--text-dim);
+  margin-bottom: 8px;
+}
+
+.badge {
+  background: var(--accent);
+  color: white;
+  font-size: 9px;
+  font-weight: 700;
+  padding: 1px 5px;
+  border-radius: 10px;
+  min-width: 16px;
+  text-align: center;
+  letter-spacing: 0;
+  text-transform: none;
+}
+
+/* ─── Legend ──────────────────────────────────────────────────────── */
+.legend {
+  display: flex;
+  gap: 10px;
+}
+
+.legend-item {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  font-size: 10px;
+  color: var(--text-dim);
+}
+
+.legend-icon {
+  display: block;
+}
+
+.legend-keep {
+  color: var(--keep);
+}
+
+.legend-snooze {
+  color: var(--snooze);
+}
+
+.legend-close {
+  color: var(--danger);
+}
+
+/* ─── Bulk actions bar ────────────────────────────────────────────── */
+.actions-bar {
+  display: flex;
+  gap: 6px;
+  margin-bottom: 6px;
+}
+
+/* ─── Buttons ─────────────────────────────────────────────────────── */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  padding: 5px 10px;
+  border: none;
+  border-radius: var(--radius-sm);
+  font-size: 11px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  white-space: nowrap;
+}
+.btn svg {
+  flex-shrink: 0;
+}
+
+.btn-sm {
+  padding: 4px 8px;
+  font-size: 10px;
+}
+
+.btn-primary {
+  background: var(--accent);
+  color: white;
+}
+.btn-primary:hover {
+  background: var(--accent-hover);
+}
+
+.btn-danger-outline {
+  background: none;
+  color: var(--danger);
+  border: 1px solid var(--danger);
+}
+.btn-danger-outline:hover {
+  background: var(--danger);
+  color: white;
+}
+
+.btn-secondary-outline {
+  background: none;
+  color: var(--snooze);
+  border: 1px solid var(--snooze);
+}
+.btn-secondary-outline:hover {
+  background: var(--snooze);
+  color: #000;
+}
+
+.btn-remove {
+  background: none;
+  border: 1px solid var(--border);
+  color: var(--text-dim);
+  padding: 3px 5px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.btn-remove:hover {
+  background: var(--danger);
+  color: white;
+  border-color: var(--danger);
+}
+.btn-remove svg {
+  display: block;
+}
+
+/* ─── Domain list ─────────────────────────────────────────────────── */
+.domain-list {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.domain-card {
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+}
+
+.domain-row {
+  display: flex;
+  align-items: center;
+  padding: 7px 8px;
+  gap: 6px;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: background 0.1s ease;
+}
+.domain-row:hover {
+  background: var(--surface);
+}
+
+.domain-row-left {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex: 1;
+  min-width: 0;
+}
+
+.favicon {
+  width: 16px;
+  height: 16px;
+  border-radius: 2px;
+  flex-shrink: 0;
+}
+
+.favicon-placeholder {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  color: var(--text-dim);
+}
+.favicon-placeholder svg {
+  display: block;
+}
+
+.domain-info {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+
+.domain-name {
+  font-size: 12px;
+  font-weight: 500;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.domain-meta {
+  font-size: 10px;
+  color: var(--text-dim);
+  white-space: nowrap;
+}
+
+/* ─── Action icon buttons (colored dots with icons) ───────────────── */
+.domain-row-actions {
+  display: flex;
+  gap: 3px;
+  flex-shrink: 0;
+}
+
+.action-btn {
+  width: 24px;
+  height: 24px;
+  border: none;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  padding: 0;
+}
+.action-btn svg {
+  display: block;
+}
+
+.action-keep {
+  background: none;
+  border: 1.5px solid var(--keep);
+  color: var(--keep);
+}
+.action-keep:hover {
+  background: var(--keep);
+  color: white;
+}
+
+.action-snooze {
+  background: none;
+  border: 1.5px solid var(--snooze);
+  color: var(--snooze);
+}
+.action-snooze:hover {
+  background: var(--snooze);
+  color: #000;
+}
+
+.action-close {
+  background: none;
+  border: 1.5px solid var(--danger);
+  color: var(--danger);
+}
+.action-close:hover {
+  background: var(--danger);
+  color: white;
+}
+
+.action-expand {
+  background: none;
+  color: var(--text-dim);
+  width: 20px;
+  height: 20px;
+}
+.action-expand:hover {
+  color: var(--text);
+}
+.action-expand.expanded svg {
+  transform: rotate(180deg);
+}
+.action-expand svg {
+  transition: transform 0.15s ease;
+}
+
+/* ─── Tab list (collapsible) ──────────────────────────────────────── */
+.tab-list {
+  border-top: 1px solid var(--border);
+  padding: 4px 8px 4px 32px;
+  max-height: 200px;
+  overflow-y: auto;
+  transition: max-height 0.2s ease, padding 0.2s ease;
+}
+
+.tab-list.collapsed {
+  max-height: 0;
+  padding: 0 8px;
+  border-top: none;
+  overflow: hidden;
+}
+
+.tab-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 3px 0;
+  gap: 8px;
+}
+
+.tab-item + .tab-item {
+  border-top: 1px solid var(--border);
+}
+
+.tab-title {
+  font-size: 11px;
+  color: var(--text-dim);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  flex: 1;
+}
+
+.tab-time {
+  font-size: 10px;
+  color: var(--text-dim);
+  flex-shrink: 0;
+  opacity: 0.6;
+}
+
+/* ─── Keep list ───────────────────────────────────────────────────── */
+.keeplist {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  margin-bottom: 8px;
+}
+
+.keep-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 5px 8px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+}
+
+.keep-domain {
+  font-size: 12px;
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.keep-domain svg {
+  color: var(--keep);
+  flex-shrink: 0;
+}
+
+.empty-keep {
+  font-size: 11px;
+  color: var(--text-dim);
+  text-align: center;
+  padding: 6px;
+}
+
+/* ─── Add domain ──────────────────────────────────────────────────── */
+.add-domain {
+  display: flex;
+  gap: 6px;
+}
+
+.input {
+  flex: 1;
+  padding: 5px 8px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--surface);
+  color: var(--text);
+  font-size: 11px;
+  outline: none;
+  transition: border-color 0.15s ease;
+}
+.input:focus {
+  border-color: var(--accent);
+}
+.input::placeholder {
+  color: var(--text-dim);
+}
+
+/* ─── Empty state ─────────────────────────────────────────────────── */
+.empty-state {
+  text-align: center;
+  padding: 20px 14px;
+}
+
+.empty-icon {
+  display: block;
+  margin: 0 auto 8px;
+  color: var(--accent);
+}
+
+.empty-state p {
+  font-size: 13px;
+  font-weight: 500;
+}
+
+.empty-sub {
+  font-size: 11px;
+  color: var(--text-dim);
+  margin-top: 4px;
+}
+
+/* ─── Loading ─────────────────────────────────────────────────────── */
+.loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+}
+
+.spinner {
+  width: 20px;
+  height: 20px;
+  border: 2px solid var(--border);
+  border-top-color: var(--accent);
+  border-radius: 50%;
+  animation: spin 0.6s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* ─── Settings ─────────────────────────────────────────────────────── */
+.section-collapsible {
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+}
+
+.setting-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 6px 0;
+}
+
+.setting-row + .setting-row {
+  border-top: 1px solid var(--border);
+}
+
+.setting-label {
+  font-size: 12px;
+  color: var(--text);
+}
+
+.select {
+  padding: 4px 8px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--bg);
+  color: var(--text);
+  font-size: 11px;
+  outline: none;
+  cursor: pointer;
+  transition: border-color 0.15s ease;
+}
+.select:focus {
+  border-color: var(--accent);
+}
+.select:hover {
+  border-color: var(--text-dim);
+}
+
+.setting-note {
+  font-size: 10px;
+  color: var(--text-dim);
+  margin-top: 6px;
+  font-style: italic;
+}
+
+/* ─── Help ─────────────────────────────────────────────────────────── */
+.help-content {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.help-step {
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+}
+
+.help-num {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: var(--accent);
+  color: white;
+  font-size: 10px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  margin-top: 1px;
+}
+
+.help-step p {
+  font-size: 11px;
+  line-height: 1.5;
+  color: var(--text-dim);
+}
+
+.help-step strong {
+  color: var(--text);
+}
+
+.help-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding-left: 30px;
+}
+
+.help-action {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 11px;
+  color: var(--text-dim);
+}
+
+.help-action strong {
+  color: var(--text);
+}
+
+.help-action svg {
+  flex-shrink: 0;
+}
+
+.help-tip {
+  font-size: 10px;
+  color: var(--accent);
+  padding: 8px 10px;
+  background: rgba(139, 92, 246, 0.1);
+  border: 1px solid rgba(139, 92, 246, 0.2);
+  border-radius: var(--radius-sm);
+  line-height: 1.5;
+}
+
+.help-tip strong {
+  color: var(--accent);
+}
+
+/* ─── Scrollbar ───────────────────────────────────────────────────── */
+::-webkit-scrollbar {
+  width: 4px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--border);
+  border-radius: 2px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--text-dim);
+}

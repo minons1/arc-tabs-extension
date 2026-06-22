@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=400, initial-scale=1.0" />
+    <title>Arc Tabs</title>
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body>
+    <div id="app">
+      <!-- Header -->
+      <header class="header">
+        <div class="header-left">
+          <img class="logo" src="../icons/icon48.png" alt="Arc Tabs" />
+          <h1>Arc Tabs</h1>
+        </div>
+        <div class="header-right">
+          <button id="btn-check" class="btn-icon" title="Check now">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-9-9c2.52 0 4.93 1 6.74 2.74L21 8"/><path d="M21 3v5h-5"/></svg>
+          </button>
+          <button id="btn-toggle-settings" class="btn-icon" title="Settings">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/></svg>
+          </button>
+          <button id="btn-toggle-help" class="btn-icon" title="How to use">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><path d="M12 17h.01"/></svg>
+          </button>
+        </div>
+      </header>
+
+      <!-- Settings panel (collapsible) -->
+      <section id="section-settings" class="section section-collapsible hidden">
+        <h2 class="section-title">
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/></svg>
+          Settings
+        </h2>
+
+        <div class="setting-row">
+          <label class="setting-label" for="select-inactivity">Close tabs after</label>
+          <select id="select-inactivity" class="select">
+            <option value="30">30 min</option>
+            <option value="60">1 hour</option>
+            <option value="120">2 hours</option>
+            <option value="360">6 hours</option>
+            <option value="720" selected>12 hours</option>
+            <option value="1440">24 hours</option>
+            <option value="2880">48 hours</option>
+          </select>
+        </div>
+
+        <div class="setting-row">
+          <label class="setting-label" for="select-check-interval">Check every</label>
+          <select id="select-check-interval" class="select">
+            <option value="1">1 min</option>
+            <option value="5" selected>5 min</option>
+            <option value="15">15 min</option>
+            <option value="30">30 min</option>
+            <option value="60">1 hour</option>
+          </select>
+        </div>
+
+        <p class="setting-note">Changes are saved automatically</p>
+      </section>
+
+      <!-- Help panel (collapsible) -->
+      <section id="section-help" class="section section-collapsible hidden">
+        <h2 class="section-title">
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><path d="M12 17h.01"/></svg>
+          How to Use
+        </h2>
+
+        <div class="help-content">
+          <div class="help-step">
+            <span class="help-num">1</span>
+            <p><strong>It runs automatically.</strong> Arc Tabs tracks when you last used each tab and checks periodically for inactive ones.</p>
+          </div>
+          <div class="help-step">
+            <span class="help-num">2</span>
+            <p><strong>Red badge = action needed.</strong> When tabs exceed the inactivity threshold, a red badge count appears on the icon.</p>
+          </div>
+          <div class="help-step">
+            <span class="help-num">3</span>
+            <p><strong>Click the icon</strong> to see inactive tabs grouped by domain. Choose what to do:</p>
+          </div>
+          <div class="help-actions">
+            <div class="help-action">
+              <svg class="legend-icon legend-keep" xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+              <span><strong>Keep</strong> — Protect this domain forever</span>
+            </div>
+            <div class="help-action">
+              <svg class="legend-icon legend-snooze" xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="20" height="20" x="2" y="2" rx="5"/><path d="M12 8v4l2 2"/></svg>
+              <span><strong>Snooze</strong> — Reset the timer, ask again later</span>
+            </div>
+            <div class="help-action">
+              <svg class="legend-icon legend-close" xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+              <span><strong>Close</strong> — Close all tabs for this domain</span>
+            </div>
+          </div>
+          <div class="help-step">
+            <span class="help-num">4</span>
+            <p><strong>Protected Domains</strong> below lets you add/remove domains that should never be auto-closed.</p>
+          </div>
+          <div class="help-step">
+            <span class="help-num">5</span>
+            <p><strong>Click a domain row</strong> to expand and see individual tab titles and how long they've been inactive.</p>
+          </div>
+          <div class="help-tip">
+            <strong>Brave users:</strong> Works with "Continue where you left off" — restored tabs get a fresh timer on startup.
+          </div>
+        </div>
+      </section>
+
+      <!-- Inactive tabs section -->
+      <section id="section-inactive" class="section hidden">
+        <div class="section-header">
+          <h2 class="section-title">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+            Inactive Tabs
+            <span id="inactive-count" class="badge"></span>
+          </h2>
+          <div class="legend">
+            <span class="legend-item">
+              <svg class="legend-icon legend-keep" xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+              Keep
+            </span>
+            <span class="legend-item">
+              <svg class="legend-icon legend-snooze" xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect width="20" height="20" x="2" y="2" rx="5"/><path d="M12 8v4l2 2"/></svg>
+              Snooze
+            </span>
+            <span class="legend-item">
+              <svg class="legend-icon legend-close" xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+              Close
+            </span>
+          </div>
+        </div>
+
+        <!-- Bulk actions -->
+        <div class="actions-bar">
+          <button id="btn-close-all" class="btn btn-sm btn-danger-outline">
+            Close All
+          </button>
+          <button id="btn-snooze-all" class="btn btn-sm btn-secondary-outline">
+            Snooze All
+          </button>
+        </div>
+
+        <div id="inactive-list" class="domain-list"></div>
+      </section>
+
+      <!-- Keep list section -->
+      <section id="section-keeplist" class="section">
+        <h2 class="section-title">
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+          Protected Domains
+          <span id="keep-count" class="badge"></span>
+        </h2>
+        <p class="section-desc">Tabs from these domains will never be auto-closed</p>
+        <div id="keeplist" class="keeplist"></div>
+        <div class="add-domain">
+          <input
+            id="input-domain"
+            type="text"
+            placeholder="Add domain (e.g. github.com)"
+            class="input"
+          />
+          <button id="btn-add-domain" class="btn btn-primary btn-sm">
+            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="M12 5v14"/></svg>
+          </button>
+        </div>
+      </section>
+
+      <!-- Empty state -->
+      <section id="section-empty" class="section hidden">
+        <div class="empty-state">
+          <svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="empty-icon"><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/></svg>
+          <p>All tabs are active!</p>
+          <p id="empty-sub" class="empty-sub">No tabs have been inactive for 12 hours</p>
+        </div>
+      </section>
+
+      <!-- Loading -->
+      <div id="loading" class="loading">
+        <div class="spinner"></div>
+      </div>
+    </div>
+
+    <script src="./main.ts" type="module"></script>
+  </body>
+</html>
