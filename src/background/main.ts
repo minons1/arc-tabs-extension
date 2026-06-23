@@ -37,7 +37,7 @@ async function saveSettings(settings: ArcSettings): Promise<void> {
 
 // ─── Track tab activity ──────────────────────────────────────────────
 async function upsertTab(tab: chrome.tabs.Tab): Promise<void> {
-  if (!tab.id || !tab.url || isChromeUrl(tab.url)) return;
+  if (!tab.id || !tab.url || isChromeUrl(tab.url) || tab.pinned) return;
 
   const records = await getTabRecords();
   const domain = getDomain(tab.url);
@@ -84,7 +84,7 @@ async function seedExistingTabs(): Promise<void> {
   const records = await getTabRecords();
 
   for (const tab of tabs) {
-    if (!tab.id || !tab.url || isChromeUrl(tab.url)) continue;
+    if (!tab.id || !tab.url || isChromeUrl(tab.url) || tab.pinned) continue;
     const domain = getDomain(tab.url);
     // Only set lastActive if we don't already have a record
     if (!records[tab.id]) {
@@ -142,6 +142,7 @@ async function checkInactiveTabs(): Promise<void> {
   // Get current live tabs
   const liveTabs = await chrome.tabs.query({});
   const liveTabIds = new Set(liveTabs.map((t) => t.id));
+  const pinnedTabIds = new Set(liveTabs.filter((t) => t.pinned).map((t) => t.id));
 
   // Group inactive tabs by domain
   const inactiveByDomain: Record<string, TabRecord[]> = {};
@@ -153,6 +154,12 @@ async function checkInactiveTabs(): Promise<void> {
     // Skip if tab no longer exists
     if (!liveTabIds.has(tabId)) {
       toRemoveIds.push(tabId);
+      continue;
+    }
+
+    // Skip pinned tabs — they should never be auto-closed
+    if (pinnedTabIds.has(tabId)) {
+      record.lastActive = now;
       continue;
     }
 

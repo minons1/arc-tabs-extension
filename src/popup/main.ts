@@ -3,6 +3,7 @@ import {
   DomainKeepList,
   ArcSettings,
   DEFAULT_SETTINGS,
+  ACCENT_COLORS,
   getDomain,
   formatInactivityLabel,
 } from "../shared";
@@ -24,7 +25,6 @@ const sectionInactive = $<HTMLElement>("section-inactive");
 const sectionEmpty = $<HTMLElement>("section-empty");
 const sectionKeeplist = $<HTMLElement>("section-keeplist");
 const sectionSettings = $<HTMLElement>("section-settings");
-const sectionHelp = $<HTMLElement>("section-help");
 const inactiveList = $<HTMLElement>("inactive-list");
 const inactiveCount = $<HTMLElement>("inactive-count");
 const keepCount = $<HTMLElement>("keep-count");
@@ -33,6 +33,7 @@ const loading = $<HTMLElement>("loading");
 const inputDomain = $<HTMLInputElement>("input-domain");
 const selectInactivity = $<HTMLSelectElement>("select-inactivity");
 const selectCheckInterval = $<HTMLSelectElement>("select-check-interval");
+const accentPicker = $<HTMLElement>("accent-picker");
 const emptySub = $<HTMLElement>("empty-sub");
 
 // ─── State ───────────────────────────────────────────────────────────
@@ -230,6 +231,31 @@ function renderSettings(settings: ArcSettings) {
   currentSettings = settings;
   selectInactivity.value = String(settings.inactivityMinutes);
   selectCheckInterval.value = String(settings.checkIntervalMinutes);
+
+  // Render accent color picker
+  accentPicker.innerHTML = "";
+  for (const color of ACCENT_COLORS) {
+    const btn = document.createElement("button");
+    btn.className = "accent-swatch";
+    btn.style.background = color.value;
+    btn.title = color.name;
+    if (settings.accentColor === color.value) {
+      btn.classList.add("active");
+    }
+    btn.addEventListener("click", async () => {
+      currentSettings.accentColor = color.value;
+      applyAccentColor(color.value, color.hover);
+      await sendMessage({ type: "SAVE_SETTINGS", settings: currentSettings });
+      renderSettings(currentSettings);
+    });
+    accentPicker.appendChild(btn);
+  }
+}
+
+// ─── Apply accent color to CSS variables ──────────────────────────────
+function applyAccentColor(value: string, hover: string) {
+  document.documentElement.style.setProperty("--accent", value);
+  document.documentElement.style.setProperty("--accent-hover", hover);
 }
 
 // ─── Refresh data ────────────────────────────────────────────────────
@@ -243,7 +269,13 @@ async function refresh() {
       sendMessage<{ data: ArcSettings }>({ type: "GET_SETTINGS" }),
     ]);
 
-    renderSettings(settingsResult.data || { ...DEFAULT_SETTINGS });
+    const settings = settingsResult.data || { ...DEFAULT_SETTINGS };
+    renderSettings(settings);
+    // Apply accent color on load
+    const accentColor = ACCENT_COLORS.find((c) => c.value === settings.accentColor);
+    if (accentColor) {
+      applyAccentColor(accentColor.value, accentColor.hover);
+    }
     renderInactiveTabs(pendingResult.data || {});
     renderKeepList(keepResult.data || {});
   } catch (err) {
@@ -258,19 +290,6 @@ async function refresh() {
 // Toggle settings
 $("btn-toggle-settings").addEventListener("click", () => {
   sectionSettings.classList.toggle("hidden");
-  // Close help if open
-  if (!sectionHelp.classList.contains("hidden")) {
-    sectionHelp.classList.add("hidden");
-  }
-});
-
-// Toggle help
-$("btn-toggle-help").addEventListener("click", () => {
-  sectionHelp.classList.toggle("hidden");
-  // Close settings if open
-  if (!sectionSettings.classList.contains("hidden")) {
-    sectionSettings.classList.add("hidden");
-  }
 });
 
 // Settings: auto-save on change

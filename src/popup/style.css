@@ -591,79 +591,30 @@ body {
   font-style: italic;
 }
 
-/* ─── Help ─────────────────────────────────────────────────────────── */
-.help-content {
+/* ─── Accent picker ─────────────────────────────────────────────────── */
+.accent-picker {
   display: flex;
-  flex-direction: column;
-  gap: 10px;
+  gap: 6px;
+  align-items: center;
 }
 
-.help-step {
-  display: flex;
-  gap: 10px;
-  align-items: flex-start;
-}
-
-.help-num {
+.accent-swatch {
   width: 20px;
   height: 20px;
   border-radius: 50%;
-  background: var(--accent);
-  color: white;
-  font-size: 10px;
-  font-weight: 700;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  flex-shrink: 0;
-  margin-top: 1px;
+  border: 2px solid transparent;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  padding: 0;
 }
 
-.help-step p {
-  font-size: 11px;
-  line-height: 1.5;
-  color: var(--text-dim);
+.accent-swatch:hover {
+  transform: scale(1.15);
 }
 
-.help-step strong {
-  color: var(--text);
-}
-
-.help-actions {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-  padding-left: 30px;
-}
-
-.help-action {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  font-size: 11px;
-  color: var(--text-dim);
-}
-
-.help-action strong {
-  color: var(--text);
-}
-
-.help-action svg {
-  flex-shrink: 0;
-}
-
-.help-tip {
-  font-size: 10px;
-  color: var(--accent);
-  padding: 8px 10px;
-  background: rgba(139, 92, 246, 0.1);
-  border: 1px solid rgba(139, 92, 246, 0.2);
-  border-radius: var(--radius-sm);
-  line-height: 1.5;
-}
-
-.help-tip strong {
-  color: var(--accent);
+.accent-swatch.active {
+  border-color: var(--text);
+  box-shadow: 0 0 0 2px var(--bg), 0 0 0 4px var(--text);
 }
 
 /* ─── Scrollbar ───────────────────────────────────────────────────── */

@@ -15,11 +15,28 @@ export interface DomainKeepList {
 export interface ArcSettings {
   inactivityMinutes: number;
   checkIntervalMinutes: number;
+  accentColor: string;
 }
+
+export interface AccentColorOption {
+  name: string;
+  value: string;
+  hover: string;
+}
+
+export const ACCENT_COLORS: AccentColorOption[] = [
+  { name: "Violet", value: "#8b5cf6", hover: "#7c3aed" },
+  { name: "Rose",   value: "#f472b6", hover: "#ec4899" },
+  { name: "Sky",    value: "#38bdf8", hover: "#0ea5e9" },
+  { name: "Mint",   value: "#34d399", hover: "#10b981" },
+  { name: "Peach",  value: "#fb923c", hover: "#f97316" },
+  { name: "Coral",  value: "#f87171", hover: "#ef4444" },
+];
 
 export const DEFAULT_SETTINGS: ArcSettings = {
   inactivityMinutes: 12 * 60, // 12 hours
   checkIntervalMinutes: 5,    // 5 minutes
+  accentColor: "#8b5cf6",     // Violet
 };
 
 export const STORAGE_KEY_TABS = "arc_tabs";
