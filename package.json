@@ -1,6 +1,6 @@
 {
   "name": "arc-tabs",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "description": "Auto-close inactive tabs after 12 hours — like Arc browser",
   "type": "module",
   "scripts": {

@@ -35,6 +35,24 @@ async function saveSettings(settings: ArcSettings): Promise<void> {
   await chrome.storage.local.set({ [STORAGE_KEY_SETTINGS]: settings });
 }
 
+// ─── Startup: cross-session inactivity tracking ───────────────────────
+// When the browser restarts, tabs get new IDs but the same URLs.
+// We build a URL→lastActive cache from old records so restored tabs
+// inherit their real inactivity timestamp instead of appearing fresh.
+let startupUrlCache: Record<string, number> | null = null;
+let startupGracePeriod = false;
+
+async function buildStartupUrlCache(): Promise<void> {
+  const records = await getTabRecords();
+  startupUrlCache = {};
+  for (const record of Object.values(records)) {
+    // Keep the most recent lastActive per URL (in case of duplicates)
+    if (!startupUrlCache[record.url] || record.lastActive > startupUrlCache[record.url]) {
+      startupUrlCache[record.url] = record.lastActive;
+    }
+  }
+}
+
 // ─── Track tab activity ──────────────────────────────────────────────
 async function upsertTab(tab: chrome.tabs.Tab): Promise<void> {
   if (!tab.id || !tab.url || isChromeUrl(tab.url) || tab.pinned) return;
@@ -42,14 +60,28 @@ async function upsertTab(tab: chrome.tabs.Tab): Promise<void> {
   const records = await getTabRecords();
   const domain = getDomain(tab.url);
 
-  records[tab.id] = {
-    tabId: tab.id,
-    url: tab.url,
-    domain,
-    title: tab.title || domain,
-    lastActive: Date.now(),
-    favIconUrl: tab.favIconUrl,
-  };
+  if (records[tab.id]) {
+    // Existing record — update metadata, but preserve lastActive during
+    // startup grace period (browser restore events are not user activity)
+    records[tab.id].url = tab.url;
+    records[tab.id].domain = domain;
+    records[tab.id].title = tab.title || domain;
+    records[tab.id].favIconUrl = tab.favIconUrl;
+    if (!startupGracePeriod) {
+      records[tab.id].lastActive = Date.now();
+    }
+  } else {
+    // New record — carry over lastActive from startup URL cache if available
+    const previousActive = startupUrlCache?.[tab.url];
+    records[tab.id] = {
+      tabId: tab.id,
+      url: tab.url,
+      domain,
+      title: tab.title || domain,
+      lastActive: previousActive || Date.now(),
+      favIconUrl: tab.favIconUrl,
+    };
+  }
 
   await saveTabRecords(records);
 }
@@ -82,20 +114,30 @@ chrome.tabs.onRemoved.addListener(async (tabId) => {
 async function seedExistingTabs(): Promise<void> {
   const tabs = await chrome.tabs.query({});
   const records = await getTabRecords();
+  const liveTabIds = new Set(tabs.filter((t) => t.id != null).map((t) => t.id!));
 
   for (const tab of tabs) {
     if (!tab.id || !tab.url || isChromeUrl(tab.url) || tab.pinned) continue;
     const domain = getDomain(tab.url);
-    // Only set lastActive if we don't already have a record
+
     if (!records[tab.id]) {
+      // Carry over lastActive from startup URL cache (cross-session matching)
+      const previousActive = startupUrlCache?.[tab.url];
       records[tab.id] = {
         tabId: tab.id,
         url: tab.url,
         domain,
         title: tab.title || domain,
-        lastActive: Date.now(),
+        lastActive: previousActive || Date.now(),
         favIconUrl: tab.favIconUrl,
       };
+    }
+  }
+
+  // Clean up orphaned records from previous session (old tab IDs)
+  for (const id of Object.keys(records)) {
+    if (!liveTabIds.has(Number(id))) {
+      delete records[Number(id)];
     }
   }
 
@@ -114,16 +156,24 @@ async function setupAlarm(): Promise<void> {
 chrome.runtime.onInstalled.addListener(async () => {
   await seedExistingTabs();
   await setupAlarm();
+  // Run initial check so any already-stale tabs show up
+  await checkInactiveTabs();
 });
 
 chrome.runtime.onStartup.addListener(async () => {
-  // On startup with "continue where you left off", tabs are restored.
-  // We need to wait a bit for tabs to load, then seed them.
+  // Build URL cache from previous session records BEFORE tabs restore events fire
+  await buildStartupUrlCache();
+  startupGracePeriod = true;
+  await setupAlarm();
+
+  // Wait for tabs to restore, then reconcile and check
   setTimeout(async () => {
     await seedExistingTabs();
-  }, 3000);
-
-  await setupAlarm();
+    await checkInactiveTabs();
+    // End grace period — from now on, tab activations are genuine user activity
+    startupGracePeriod = false;
+    startupUrlCache = null;
+  }, 5000);
 });
 
 chrome.alarms.onAlarm.addListener(async (alarm) => {

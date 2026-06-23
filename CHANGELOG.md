@@ -2,6 +2,15 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.1.2] - 2026-06-23
+
+### Changed
+
+- **Cross-session inactivity tracking** — on browser restart, restored tabs now inherit their real `lastActive` timestamp from the previous session (matched by URL), so tabs that were idle before closing are still flagged as inactive
+- **Immediate check on startup** — the extension runs an inactivity check right after browser launch (5s grace for tabs to restore), instead of waiting for the first alarm cycle
+- **Startup grace period** — tab restore events during browser startup no longer reset the inactivity timer (only genuine user activity resets it after the grace period ends)
+- **Orphan cleanup** — old tab records from previous sessions (stale tab IDs) are cleaned up on startup
+
 ## [0.1.1] - 2026-06-23
 
 ### Added
