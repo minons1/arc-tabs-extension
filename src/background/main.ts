@@ -178,7 +178,7 @@ chrome.runtime.onStartup.addListener(async () => {
 
   setTimeout(async () => {
     await seedExistingTabs();
-    await checkInactiveTabs();
+    await checkInactiveTabs(true);
     startupGracePeriod = false;
     startupUrlCache = null;
   }, 5000);
@@ -190,7 +190,7 @@ chrome.alarms.onAlarm.addListener(async (alarm) => {
 });
 
 // ─── Core logic: find inactive tabs ──────────────────────────────────
-async function checkInactiveTabs(): Promise<void> {
+async function checkInactiveTabs(isStartup = false): Promise<void> {
   const settings = await getSettings();
   if (settings.mode === "off") {
     // Clear any stale badge / pending data
@@ -245,8 +245,8 @@ async function checkInactiveTabs(): Promise<void> {
 
   const totalInactive = Object.values(inactiveByDomain).flat().length;
 
-  // ── Auto mode: close inactive tabs automatically ──────────────────
-  if (settings.mode === "auto" && totalInactive > 0) {
+  // ── Auto mode: close inactive tabs automatically — only on startup ──
+  if (settings.mode === "auto" && isStartup && totalInactive > 0) {
     const tabIdsToClose = Object.values(inactiveByDomain)
       .flat()
       .map((t) => t.tabId);

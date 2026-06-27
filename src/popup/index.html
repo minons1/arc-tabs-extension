@@ -26,7 +26,12 @@
 
       <!-- Toolbar: mode toggle + nav tabs -->
       <div class="toolbar">
-        <button id="btn-mode" class="mode-btn" data-mode="manual" title="Click to change mode">Manual</button>
+        <div id="mode-toggle" class="mode-toggle" title="Click to change mode">
+          <div class="mode-indicator" id="mode-indicator"></div>
+          <button class="mode-segment" data-mode="off">Off</button>
+          <button class="mode-segment" data-mode="manual">Manual</button>
+          <button class="mode-segment" data-mode="auto">Auto</button>
+        </div>
         <div class="nav-tabs">
           <button class="nav-btn active" data-view="tabs">Tabs</button>
           <button class="nav-btn" data-view="protected">Protected</button>
@@ -111,19 +116,7 @@
           <div id="inactive-list" class="domain-list"></div>
         </section>
 
-        <!-- Active tabs section (fallback when no inactive) -->
-        <section id="section-active" class="section hidden">
-          <div class="section-header">
-            <h2 class="section-title">
-              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/></svg>
-              Active Tabs
-              <span id="active-count" class="badge"></span>
-            </h2>
-          </div>
-          <div id="active-list" class="domain-list"></div>
-        </section>
-
-        <!-- Empty state (off mode or no tabs at all) -->
+        <!-- Empty state (off mode or no inactive tabs) -->
         <section id="section-empty" class="section hidden">
           <div class="empty-state">
             <svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="empty-icon"><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/></svg>

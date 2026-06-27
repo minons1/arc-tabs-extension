@@ -24,12 +24,9 @@ const $ = <T extends HTMLElement>(id: string) => document.getElementById(id) as 
 
 const sectionSettings = $<HTMLElement>("section-settings");
 const sectionInactive = $<HTMLElement>("section-inactive");
-const sectionActive = $<HTMLElement>("section-active");
 const sectionEmpty = $<HTMLElement>("section-empty");
 const inactiveList = $<HTMLElement>("inactive-list");
 const inactiveCount = $<HTMLElement>("inactive-count");
-const activeList = $<HTMLElement>("active-list");
-const activeCount = $<HTMLElement>("active-count");
 const keepCount = $<HTMLElement>("keep-count");
 const keeplist = $<HTMLElement>("keeplist");
 const loading = $<HTMLElement>("loading");
@@ -42,28 +39,57 @@ const emptySub = $<HTMLElement>("empty-sub");
 const viewTabs = $<HTMLElement>("view-tabs");
 const viewProtected = $<HTMLElement>("view-protected");
 
-// Mode button (rotating: off → manual → auto)
-const btnMode = $<HTMLButtonElement>("btn-mode");
+// Mode toggle (segmented control: off → manual → auto)
+const modeToggle = $<HTMLElement>("mode-toggle");
+const modeIndicator = $<HTMLElement>("mode-indicator");
+const modeSegments = modeToggle.querySelectorAll<HTMLButtonElement>(".mode-segment");
 const MODE_ORDER: OperatingMode[] = ["off", "manual", "auto"];
-const MODE_LABELS: Record<OperatingMode, string> = {
-  off: "Off",
-  manual: "Manual",
-  auto: "Auto",
-};
 
 function renderModeToggle(mode: OperatingMode) {
-  btnMode.textContent = MODE_LABELS[mode];
-  btnMode.dataset.mode = mode;
-  btnMode.className = `mode-btn mode-${mode}`;
+  const pos = MODE_ORDER.indexOf(mode);
+  modeIndicator.dataset.pos = String(pos);
+
+  modeSegments.forEach((seg) => {
+    const segMode = seg.dataset.mode as OperatingMode;
+    seg.classList.remove("active-off", "active-manual", "active-auto");
+    if (segMode === mode) {
+      seg.classList.add(`active-${mode}`);
+    }
+  });
 }
 
-btnMode.addEventListener("click", async () => {
-  const current = btnMode.dataset.mode as OperatingMode;
-  const next = MODE_ORDER[(MODE_ORDER.indexOf(current) + 1) % MODE_ORDER.length];
-  currentSettings.mode = next;
-  renderModeToggle(next);
-  await sendMessage({ type: "SAVE_SETTINGS", settings: currentSettings });
-  await refresh();
+function triggerModeAnimation(mode: OperatingMode) {
+  // Pulse + flash the indicator
+  modeIndicator.classList.remove("pulse", "flash");
+  // Force reflow to restart animation
+  void modeIndicator.offsetWidth;
+  modeIndicator.classList.add("pulse", "flash");
+  modeIndicator.addEventListener("animationend", () => {
+    modeIndicator.classList.remove("pulse", "flash");
+  }, { once: true });
+}
+
+function spawnRipple(btn: HTMLButtonElement, e: MouseEvent) {
+  const ripple = document.createElement("span");
+  ripple.className = "ripple";
+  const rect = btn.getBoundingClientRect();
+  ripple.style.left = `${e.clientX - rect.left - 15}px`;
+  ripple.style.top = `${e.clientY - rect.top - 15}px`;
+  btn.appendChild(ripple);
+  ripple.addEventListener("animationend", () => ripple.remove());
+}
+
+modeSegments.forEach((seg) => {
+  seg.addEventListener("click", async () => {
+    const targetMode = seg.dataset.mode as OperatingMode;
+    const currentMode = MODE_ORDER[Number(modeIndicator.dataset.pos)];
+    if (targetMode === currentMode) return;
+
+    currentSettings.mode = targetMode;
+    renderModeToggle(targetMode);
+    await sendMessage({ type: "SAVE_SETTINGS", settings: currentSettings });
+    await refresh();
+  });
 });
 
 // Nav tab buttons
@@ -232,99 +258,6 @@ function renderInactiveTabs(data: PendingClosures) {
   });
 }
 
-// ─── Render active tabs ──────────────────────────────────────────────
-function renderActiveTabs(records: Record<number, TabRecord>) {
-  const entries = Object.values(records);
-  if (entries.length === 0) return;
-
-  // Group by domain
-  const byDomain: Record<string, TabRecord[]> = {};
-  for (const record of entries) {
-    if (!byDomain[record.domain]) byDomain[record.domain] = [];
-    byDomain[record.domain].push(record);
-  }
-
-  sectionActive.classList.remove("hidden");
-  activeCount.textContent = String(entries.length);
-  activeList.innerHTML = "";
-
-  const sorted = Object.keys(byDomain).sort(
-    (a, b) => byDomain[b].length - byDomain[a].length
-  );
-
-  for (const domain of sorted) {
-    const tabs = byDomain[domain];
-    const card = document.createElement("div");
-    card.className = "domain-card";
-
-    const row = document.createElement("div");
-    row.className = "domain-row";
-
-    const left = document.createElement("div");
-    left.className = "domain-row-left";
-
-    let favicon: string;
-    if (tabs[0].favIconUrl) {
-      favicon = `<img class="favicon" src="${tabs[0].favIconUrl}" data-fallback="globe" />`;
-    } else {
-      favicon = `<span class="favicon-placeholder">${ICONS.globe}</span>`;
-    }
-
-    left.innerHTML = `
-      ${favicon}
-      <div class="domain-info">
-        <span class="domain-name">${domain}</span>
-        <span class="domain-meta">${tabs.length} tab${tabs.length > 1 ? "s" : ""} · active ${formatTimeAgo(tabs[0].lastActive)}</span>
-      </div>
-    `;
-
-    const btnExpand = document.createElement("button");
-    btnExpand.className = "action-btn action-expand";
-    btnExpand.innerHTML = ICONS.chevron;
-    btnExpand.title = "Show tabs";
-
-    row.append(left, btnExpand);
-    card.appendChild(row);
-
-    const tabList = document.createElement("div");
-    tabList.className = "tab-list collapsed";
-
-    for (const tab of tabs) {
-      const tabItem = document.createElement("div");
-      tabItem.className = "tab-item";
-      tabItem.innerHTML = `
-        <span class="tab-title" title="${tab.title}">${tab.title}</span>
-        <span class="tab-time">${formatTimeAgo(tab.lastActive)}</span>
-      `;
-      tabList.appendChild(tabItem);
-    }
-
-    card.appendChild(tabList);
-
-    const toggleExpand = (e: Event) => {
-      if ((e.target as HTMLElement).closest("button")) return;
-      tabList.classList.toggle("collapsed");
-      btnExpand.classList.toggle("expanded");
-    };
-    row.addEventListener("click", toggleExpand);
-    btnExpand.addEventListener("click", (e) => {
-      e.stopPropagation();
-      toggleExpand(e);
-    });
-
-    activeList.appendChild(card);
-  }
-
-  activeList.querySelectorAll<HTMLImageElement>('img.favicon').forEach((img) => {
-    img.addEventListener('error', () => {
-      const span = document.createElement('span');
-      span.className = 'favicon-placeholder';
-      span.innerHTML = ICONS.globe;
-      img.replaceWith(span);
-    });
-  });
-}
-
 // ─── Render keep list ────────────────────────────────────────────────
 function renderKeepList(data: DomainKeepList) {
   const domains = Object.keys(data);
@@ -393,11 +326,10 @@ async function refresh() {
   showLoading(true);
 
   try {
-    const [pendingResult, keepResult, settingsResult, allTabsResult] = await Promise.all([
+    const [pendingResult, keepResult, settingsResult] = await Promise.all([
       sendMessage<{ data: PendingClosures }>({ type: "GET_PENDING_CLOSURES" }),
       sendMessage<{ data: DomainKeepList }>({ type: "GET_KEEP_LIST" }),
       sendMessage<{ data: ArcSettings }>({ type: "GET_SETTINGS" }),
-      sendMessage<{ data: Record<number, TabRecord> }>({ type: "GET_ALL_TABS" }),
     ]);
 
     const settings = settingsResult.data || { ...DEFAULT_SETTINGS };
@@ -412,7 +344,6 @@ async function refresh() {
 
     // ── Tabs view logic ─────────────────────────────────────────────
     sectionInactive.classList.add("hidden");
-    sectionActive.classList.add("hidden");
     sectionEmpty.classList.add("hidden");
 
     if (settings.mode === "off") {
@@ -426,16 +357,9 @@ async function refresh() {
       if (totalInactive > 0) {
         renderInactiveTabs(pendingData);
       } else {
-        const allRecords = allTabsResult.data || {};
-        const totalActive = Object.keys(allRecords).length;
-
-        if (totalActive > 0) {
-          renderActiveTabs(allRecords);
-        } else {
-          emptyTitle.textContent = "No tabs tracked yet";
-          emptySub.textContent = "Tabs will appear here once tracked";
-          sectionEmpty.classList.remove("hidden");
-        }
+        emptyTitle.textContent = "All tabs are active!";
+        emptySub.textContent = `No tabs have been inactive for ${formatInactivityLabel(currentSettings.inactivityMinutes)}`;
+        sectionEmpty.classList.remove("hidden");
       }
     }
   } catch (err) {

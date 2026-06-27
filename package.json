@@ -6,7 +6,11 @@
   "scripts": {
     "dev": "vite build --watch",
     "build": "vite build",
-    "clean": "rm -rf dist"
+    "clean": "rm -rf dist",
+    "bump": "node scripts/bump.mjs",
+    "bump:p": "node scripts/bump.mjs p",
+    "bump:mi": "node scripts/bump.mjs mi",
+    "bump:ma": "node scripts/bump.mjs ma"
   },
   "devDependencies": {
     "typescript": "^5.7.0",
