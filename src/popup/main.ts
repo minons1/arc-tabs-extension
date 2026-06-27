@@ -42,8 +42,30 @@ const emptySub = $<HTMLElement>("empty-sub");
 const viewTabs = $<HTMLElement>("view-tabs");
 const viewProtected = $<HTMLElement>("view-protected");
 
-// Mode toggle buttons
-const modeButtons = document.querySelectorAll<HTMLButtonElement>(".mode-btn");
+// Mode button (rotating: off → manual → auto)
+const btnMode = $<HTMLButtonElement>("btn-mode");
+const MODE_ORDER: OperatingMode[] = ["off", "manual", "auto"];
+const MODE_LABELS: Record<OperatingMode, string> = {
+  off: "Off",
+  manual: "Manual",
+  auto: "Auto",
+};
+
+function renderModeToggle(mode: OperatingMode) {
+  btnMode.textContent = MODE_LABELS[mode];
+  btnMode.dataset.mode = mode;
+  btnMode.className = `mode-btn mode-${mode}`;
+}
+
+btnMode.addEventListener("click", async () => {
+  const current = btnMode.dataset.mode as OperatingMode;
+  const next = MODE_ORDER[(MODE_ORDER.indexOf(current) + 1) % MODE_ORDER.length];
+  currentSettings.mode = next;
+  renderModeToggle(next);
+  await sendMessage({ type: "SAVE_SETTINGS", settings: currentSettings });
+  await refresh();
+});
+
 // Nav tab buttons
 const navButtons = document.querySelectorAll<HTMLButtonElement>(".nav-btn");
 
@@ -86,25 +108,6 @@ navButtons.forEach((btn) => {
     switchView(btn.dataset.view as "tabs" | "protected");
   });
 });
-
-// ─── Mode toggle ─────────────────────────────────────────────────────
-function renderModeToggle(mode: OperatingMode) {
-  modeButtons.forEach((btn) => {
-    btn.classList.toggle("active", btn.dataset.mode === mode);
-  });
-}
-
-modeButtons.forEach((btn) => {
-  btn.addEventListener("click", async () => {
-    const mode = btn.dataset.mode as OperatingMode;
-    currentSettings.mode = mode;
-    renderModeToggle(mode);
-    await sendMessage({ type: "SAVE_SETTINGS", settings: currentSettings });
-    await refresh();
-  });
-});
-
-// ─── Render inactive tabs ────────────────────────────────────────────
 type PendingClosures = Record<string, TabRecord[]>;
 
 function renderInactiveTabs(data: PendingClosures) {

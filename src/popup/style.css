@@ -107,43 +107,38 @@ body {
   z-index: 10;
 }
 
-/* Mode toggle (Off / Manual / Auto) */
-.mode-toggle {
-  display: flex;
-  background: var(--surface);
+/* Mode button (single rotating: Off / Manual / Auto) */
+.mode-btn {
+  padding: 4px 12px;
+  font-size: 11px;
+  font-weight: 600;
   border-radius: var(--radius-sm);
   border: 1px solid var(--border);
-  overflow: hidden;
-}
-
-.mode-btn {
-  padding: 4px 10px;
-  font-size: 11px;
-  font-weight: 500;
-  background: none;
-  border: none;
-  color: var(--text-dim);
   cursor: pointer;
   transition: all 0.15s ease;
-  position: relative;
+  letter-spacing: 0.3px;
 }
 
 .mode-btn:hover {
-  color: var(--text);
-  background: var(--surface-hover);
+  transform: scale(1.05);
 }
 
-.mode-btn.active {
-  color: white;
+.mode-btn.mode-manual {
   background: var(--accent);
+  color: white;
+  border-color: var(--accent);
 }
 
-.mode-btn[data-mode="off"].active {
-  background: var(--text-dim);
-}
-
-.mode-btn[data-mode="auto"].active {
+.mode-btn.mode-auto {
   background: var(--danger);
+  color: white;
+  border-color: var(--danger);
+}
+
+.mode-btn.mode-off {
+  background: var(--surface);
+  color: var(--text-dim);
+  border-color: var(--border);
 }
 
 /* Nav tabs (Tabs / Protected) */
