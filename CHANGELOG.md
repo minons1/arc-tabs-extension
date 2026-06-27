@@ -2,6 +2,24 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.2.0] - 2026-06-27
+
+### Added
+
+- **Operating mode toggle** (Off / Manual / Auto) in the toolbar
+  - **Off** — extension is fully disabled, no tracking, no alarms, no badge
+  - **Manual** — watches tabs and shows inactive list for user review; respects protected domains and pinned tabs
+  - **Auto** — same as Manual, but automatically closes inactive tabs on every check (alarm + startup); respects protected domains and pinned tabs
+- **Nav tabs** (Tabs / Protected) in the toolbar — Protected Domains moved to its own view
+- **Active Tabs view** — when no inactive tabs exist, the main view shows all tracked active tabs grouped by domain (read-only overview)
+- **Off mode empty state** — clear messaging when extension is disabled
+
+### Changed
+
+- Protected Domains section moved from the main view to its own "Protected" nav tab
+- Main popup view is now the tabs list (inactive if any, active as fallback)
+- Mode toggle colors: Manual = accent, Auto = red, Off = gray
+
 ## [0.1.2] - 2026-06-23
 
 ### Changed

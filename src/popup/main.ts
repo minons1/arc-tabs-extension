@@ -4,11 +4,12 @@ import {
   ArcSettings,
   DEFAULT_SETTINGS,
   ACCENT_COLORS,
+  OperatingMode,
   getDomain,
   formatInactivityLabel,
 } from "../shared";
 
-// ─── SVG icons (Solar-style, small for action buttons) ───────────────
+// ─── SVG icons ───────────────────────────────────────────────────────
 const ICONS = {
   shield: `<svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>`,
   close: `<svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>`,
@@ -21,12 +22,14 @@ const ICONS = {
 // ─── DOM refs ────────────────────────────────────────────────────────
 const $ = <T extends HTMLElement>(id: string) => document.getElementById(id) as T;
 
-const sectionInactive = $<HTMLElement>("section-inactive");
-const sectionEmpty = $<HTMLElement>("section-empty");
-const sectionKeeplist = $<HTMLElement>("section-keeplist");
 const sectionSettings = $<HTMLElement>("section-settings");
+const sectionInactive = $<HTMLElement>("section-inactive");
+const sectionActive = $<HTMLElement>("section-active");
+const sectionEmpty = $<HTMLElement>("section-empty");
 const inactiveList = $<HTMLElement>("inactive-list");
 const inactiveCount = $<HTMLElement>("inactive-count");
+const activeList = $<HTMLElement>("active-list");
+const activeCount = $<HTMLElement>("active-count");
 const keepCount = $<HTMLElement>("keep-count");
 const keeplist = $<HTMLElement>("keeplist");
 const loading = $<HTMLElement>("loading");
@@ -34,10 +37,19 @@ const inputDomain = $<HTMLInputElement>("input-domain");
 const selectInactivity = $<HTMLSelectElement>("select-inactivity");
 const selectCheckInterval = $<HTMLSelectElement>("select-check-interval");
 const accentPicker = $<HTMLElement>("accent-picker");
+const emptyTitle = $<HTMLElement>("empty-title");
 const emptySub = $<HTMLElement>("empty-sub");
+const viewTabs = $<HTMLElement>("view-tabs");
+const viewProtected = $<HTMLElement>("view-protected");
+
+// Mode toggle buttons
+const modeButtons = document.querySelectorAll<HTMLButtonElement>(".mode-btn");
+// Nav tab buttons
+const navButtons = document.querySelectorAll<HTMLButtonElement>(".nav-btn");
 
 // ─── State ───────────────────────────────────────────────────────────
 let currentSettings: ArcSettings = { ...DEFAULT_SETTINGS };
+let currentView: "tabs" | "protected" = "tabs";
 
 // ─── Helpers ─────────────────────────────────────────────────────────
 function formatTimeAgo(timestamp: number): string {
@@ -58,6 +70,40 @@ function showLoading(show: boolean) {
   loading.classList.toggle("hidden", !show);
 }
 
+// ─── View switching ──────────────────────────────────────────────────
+function switchView(view: "tabs" | "protected") {
+  currentView = view;
+  viewTabs.classList.toggle("hidden", view !== "tabs");
+  viewProtected.classList.toggle("hidden", view !== "protected");
+
+  navButtons.forEach((btn) => {
+    btn.classList.toggle("active", btn.dataset.view === view);
+  });
+}
+
+navButtons.forEach((btn) => {
+  btn.addEventListener("click", () => {
+    switchView(btn.dataset.view as "tabs" | "protected");
+  });
+});
+
+// ─── Mode toggle ─────────────────────────────────────────────────────
+function renderModeToggle(mode: OperatingMode) {
+  modeButtons.forEach((btn) => {
+    btn.classList.toggle("active", btn.dataset.mode === mode);
+  });
+}
+
+modeButtons.forEach((btn) => {
+  btn.addEventListener("click", async () => {
+    const mode = btn.dataset.mode as OperatingMode;
+    currentSettings.mode = mode;
+    renderModeToggle(mode);
+    await sendMessage({ type: "SAVE_SETTINGS", settings: currentSettings });
+    await refresh();
+  });
+});
+
 // ─── Render inactive tabs ────────────────────────────────────────────
 type PendingClosures = Record<string, TabRecord[]>;
 
@@ -65,19 +111,12 @@ function renderInactiveTabs(data: PendingClosures) {
   const domains = Object.keys(data);
   const totalTabs = domains.reduce((sum, d) => sum + data[d].length, 0);
 
-  if (totalTabs === 0) {
-    sectionInactive.classList.add("hidden");
-    sectionEmpty.classList.remove("hidden");
-    emptySub.textContent = `No tabs have been inactive for ${formatInactivityLabel(currentSettings.inactivityMinutes)}`;
-    return;
-  }
+  if (totalTabs === 0) return;
 
   sectionInactive.classList.remove("hidden");
-  sectionEmpty.classList.add("hidden");
   inactiveCount.textContent = String(totalTabs);
   inactiveList.innerHTML = "";
 
-  // Sort domains by tab count descending
   const sorted = domains.sort((a, b) => data[b].length - data[a].length);
 
   for (const domain of sorted) {
@@ -88,7 +127,6 @@ function renderInactiveTabs(data: PendingClosures) {
     const row = document.createElement("div");
     row.className = "domain-row";
 
-    // Left: favicon + domain info
     const left = document.createElement("div");
     left.className = "domain-row-left";
 
@@ -107,7 +145,6 @@ function renderInactiveTabs(data: PendingClosures) {
       </div>
     `;
 
-    // Right: colored icon action buttons
     const actions = document.createElement("div");
     actions.className = "domain-row-actions";
 
@@ -145,7 +182,6 @@ function renderInactiveTabs(data: PendingClosures) {
 
     actions.append(btnKeep, btnSnooze, btnClose);
 
-    // Expand chevron
     const btnExpand = document.createElement("button");
     btnExpand.className = "action-btn action-expand";
     btnExpand.innerHTML = ICONS.chevron;
@@ -154,7 +190,6 @@ function renderInactiveTabs(data: PendingClosures) {
     row.append(left, actions, btnExpand);
     card.appendChild(row);
 
-    // Collapsible tab list
     const tabList = document.createElement("div");
     tabList.className = "tab-list collapsed";
 
@@ -170,7 +205,6 @@ function renderInactiveTabs(data: PendingClosures) {
 
     card.appendChild(tabList);
 
-    // Toggle expand on row click
     const toggleExpand = (e: Event) => {
       if ((e.target as HTMLElement).closest("button")) return;
       tabList.classList.toggle("collapsed");
@@ -185,8 +219,100 @@ function renderInactiveTabs(data: PendingClosures) {
     inactiveList.appendChild(card);
   }
 
-  // Handle broken favicon images without inline handlers (CSP-safe)
   inactiveList.querySelectorAll<HTMLImageElement>('img.favicon').forEach((img) => {
+    img.addEventListener('error', () => {
+      const span = document.createElement('span');
+      span.className = 'favicon-placeholder';
+      span.innerHTML = ICONS.globe;
+      img.replaceWith(span);
+    });
+  });
+}
+
+// ─── Render active tabs ──────────────────────────────────────────────
+function renderActiveTabs(records: Record<number, TabRecord>) {
+  const entries = Object.values(records);
+  if (entries.length === 0) return;
+
+  // Group by domain
+  const byDomain: Record<string, TabRecord[]> = {};
+  for (const record of entries) {
+    if (!byDomain[record.domain]) byDomain[record.domain] = [];
+    byDomain[record.domain].push(record);
+  }
+
+  sectionActive.classList.remove("hidden");
+  activeCount.textContent = String(entries.length);
+  activeList.innerHTML = "";
+
+  const sorted = Object.keys(byDomain).sort(
+    (a, b) => byDomain[b].length - byDomain[a].length
+  );
+
+  for (const domain of sorted) {
+    const tabs = byDomain[domain];
+    const card = document.createElement("div");
+    card.className = "domain-card";
+
+    const row = document.createElement("div");
+    row.className = "domain-row";
+
+    const left = document.createElement("div");
+    left.className = "domain-row-left";
+
+    let favicon: string;
+    if (tabs[0].favIconUrl) {
+      favicon = `<img class="favicon" src="${tabs[0].favIconUrl}" data-fallback="globe" />`;
+    } else {
+      favicon = `<span class="favicon-placeholder">${ICONS.globe}</span>`;
+    }
+
+    left.innerHTML = `
+      ${favicon}
+      <div class="domain-info">
+        <span class="domain-name">${domain}</span>
+        <span class="domain-meta">${tabs.length} tab${tabs.length > 1 ? "s" : ""} · active ${formatTimeAgo(tabs[0].lastActive)}</span>
+      </div>
+    `;
+
+    const btnExpand = document.createElement("button");
+    btnExpand.className = "action-btn action-expand";
+    btnExpand.innerHTML = ICONS.chevron;
+    btnExpand.title = "Show tabs";
+
+    row.append(left, btnExpand);
+    card.appendChild(row);
+
+    const tabList = document.createElement("div");
+    tabList.className = "tab-list collapsed";
+
+    for (const tab of tabs) {
+      const tabItem = document.createElement("div");
+      tabItem.className = "tab-item";
+      tabItem.innerHTML = `
+        <span class="tab-title" title="${tab.title}">${tab.title}</span>
+        <span class="tab-time">${formatTimeAgo(tab.lastActive)}</span>
+      `;
+      tabList.appendChild(tabItem);
+    }
+
+    card.appendChild(tabList);
+
+    const toggleExpand = (e: Event) => {
+      if ((e.target as HTMLElement).closest("button")) return;
+      tabList.classList.toggle("collapsed");
+      btnExpand.classList.toggle("expanded");
+    };
+    row.addEventListener("click", toggleExpand);
+    btnExpand.addEventListener("click", (e) => {
+      e.stopPropagation();
+      toggleExpand(e);
+    });
+
+    activeList.appendChild(card);
+  }
+
+  activeList.querySelectorAll<HTMLImageElement>('img.favicon').forEach((img) => {
     img.addEventListener('error', () => {
       const span = document.createElement('span');
       span.className = 'favicon-placeholder';
@@ -231,6 +357,7 @@ function renderSettings(settings: ArcSettings) {
   currentSettings = settings;
   selectInactivity.value = String(settings.inactivityMinutes);
   selectCheckInterval.value = String(settings.checkIntervalMinutes);
+  renderModeToggle(settings.mode);
 
   // Render accent color picker
   accentPicker.innerHTML = "";
@@ -263,21 +390,51 @@ async function refresh() {
   showLoading(true);
 
   try {
-    const [pendingResult, keepResult, settingsResult] = await Promise.all([
+    const [pendingResult, keepResult, settingsResult, allTabsResult] = await Promise.all([
       sendMessage<{ data: PendingClosures }>({ type: "GET_PENDING_CLOSURES" }),
       sendMessage<{ data: DomainKeepList }>({ type: "GET_KEEP_LIST" }),
       sendMessage<{ data: ArcSettings }>({ type: "GET_SETTINGS" }),
+      sendMessage<{ data: Record<number, TabRecord> }>({ type: "GET_ALL_TABS" }),
     ]);
 
     const settings = settingsResult.data || { ...DEFAULT_SETTINGS };
     renderSettings(settings);
-    // Apply accent color on load
+
     const accentColor = ACCENT_COLORS.find((c) => c.value === settings.accentColor);
     if (accentColor) {
       applyAccentColor(accentColor.value, accentColor.hover);
     }
-    renderInactiveTabs(pendingResult.data || {});
+
     renderKeepList(keepResult.data || {});
+
+    // ── Tabs view logic ─────────────────────────────────────────────
+    sectionInactive.classList.add("hidden");
+    sectionActive.classList.add("hidden");
+    sectionEmpty.classList.add("hidden");
+
+    if (settings.mode === "off") {
+      emptyTitle.textContent = "Extension is off";
+      emptySub.textContent = "Enable Manual or Auto mode to start tracking tabs";
+      sectionEmpty.classList.remove("hidden");
+    } else {
+      const pendingData = pendingResult.data || {};
+      const totalInactive = Object.values(pendingData).flat().length;
+
+      if (totalInactive > 0) {
+        renderInactiveTabs(pendingData);
+      } else {
+        const allRecords = allTabsResult.data || {};
+        const totalActive = Object.keys(allRecords).length;
+
+        if (totalActive > 0) {
+          renderActiveTabs(allRecords);
+        } else {
+          emptyTitle.textContent = "No tabs tracked yet";
+          emptySub.textContent = "Tabs will appear here once tracked";
+          sectionEmpty.classList.remove("hidden");
+        }
+      }
+    }
   } catch (err) {
     console.error("Failed to load data:", err);
   } finally {

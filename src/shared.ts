@@ -12,10 +12,13 @@ export interface DomainKeepList {
   [domain: string]: boolean;
 }
 
+export type OperatingMode = "off" | "manual" | "auto";
+
 export interface ArcSettings {
   inactivityMinutes: number;
   checkIntervalMinutes: number;
   accentColor: string;
+  mode: OperatingMode;
 }
 
 export interface AccentColorOption {
@@ -37,6 +40,7 @@ export const DEFAULT_SETTINGS: ArcSettings = {
   inactivityMinutes: 12 * 60, // 12 hours
   checkIntervalMinutes: 5,    // 5 minutes
   accentColor: "#8b5cf6",     // Violet
+  mode: "manual",
 };
 
 export const STORAGE_KEY_TABS = "arc_tabs";

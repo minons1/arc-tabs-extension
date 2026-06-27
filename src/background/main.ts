@@ -7,6 +7,7 @@ import {
   STORAGE_KEY_KEEP,
   STORAGE_KEY_SETTINGS,
   ALARM_NAME,
+  OperatingMode,
   getDomain,
   isChromeUrl,
 } from "../shared";
@@ -36,9 +37,6 @@ async function saveSettings(settings: ArcSettings): Promise<void> {
 }
 
 // ─── Startup: cross-session inactivity tracking ───────────────────────
-// When the browser restarts, tabs get new IDs but the same URLs.
-// We build a URL→lastActive cache from old records so restored tabs
-// inherit their real inactivity timestamp instead of appearing fresh.
 let startupUrlCache: Record<string, number> | null = null;
 let startupGracePeriod = false;
 
@@ -46,7 +44,6 @@ async function buildStartupUrlCache(): Promise<void> {
   const records = await getTabRecords();
   startupUrlCache = {};
   for (const record of Object.values(records)) {
-    // Keep the most recent lastActive per URL (in case of duplicates)
     if (!startupUrlCache[record.url] || record.lastActive > startupUrlCache[record.url]) {
       startupUrlCache[record.url] = record.lastActive;
     }
@@ -57,12 +54,14 @@ async function buildStartupUrlCache(): Promise<void> {
 async function upsertTab(tab: chrome.tabs.Tab): Promise<void> {
   if (!tab.id || !tab.url || isChromeUrl(tab.url) || tab.pinned) return;
 
+  const settings = await getSettings();
+  // Don't track if mode is off
+  if (settings.mode === "off") return;
+
   const records = await getTabRecords();
   const domain = getDomain(tab.url);
 
   if (records[tab.id]) {
-    // Existing record — update metadata, but preserve lastActive during
-    // startup grace period (browser restore events are not user activity)
     records[tab.id].url = tab.url;
     records[tab.id].domain = domain;
     records[tab.id].title = tab.title || domain;
@@ -71,7 +70,6 @@ async function upsertTab(tab: chrome.tabs.Tab): Promise<void> {
       records[tab.id].lastActive = Date.now();
     }
   } else {
-    // New record — carry over lastActive from startup URL cache if available
     const previousActive = startupUrlCache?.[tab.url];
     records[tab.id] = {
       tabId: tab.id,
@@ -86,7 +84,6 @@ async function upsertTab(tab: chrome.tabs.Tab): Promise<void> {
   await saveTabRecords(records);
 }
 
-// When a tab is activated, update its lastActive
 chrome.tabs.onActivated.addListener(async (activeInfo) => {
   try {
     const tab = await chrome.tabs.get(activeInfo.tabId);
@@ -96,14 +93,12 @@ chrome.tabs.onActivated.addListener(async (activeInfo) => {
   }
 });
 
-// When a tab updates (navigates), update its record
 chrome.tabs.onUpdated.addListener(async (tabId, changeInfo, tab) => {
   if (changeInfo.status === "complete" && tab.url) {
     await upsertTab(tab);
   }
 });
 
-// When a tab is closed, remove its record
 chrome.tabs.onRemoved.addListener(async (tabId) => {
   const records = await getTabRecords();
   delete records[tabId];
@@ -112,6 +107,9 @@ chrome.tabs.onRemoved.addListener(async (tabId) => {
 
 // ─── On install / startup: seed all existing tabs ────────────────────
 async function seedExistingTabs(): Promise<void> {
+  const settings = await getSettings();
+  if (settings.mode === "off") return;
+
   const tabs = await chrome.tabs.query({});
   const records = await getTabRecords();
   const liveTabIds = new Set(tabs.filter((t) => t.id != null).map((t) => t.id!));
@@ -121,7 +119,6 @@ async function seedExistingTabs(): Promise<void> {
     const domain = getDomain(tab.url);
 
     if (!records[tab.id]) {
-      // Carry over lastActive from startup URL cache (cross-session matching)
       const previousActive = startupUrlCache?.[tab.url];
       records[tab.id] = {
         tabId: tab.id,
@@ -134,7 +131,6 @@ async function seedExistingTabs(): Promise<void> {
     }
   }
 
-  // Clean up orphaned records from previous session (old tab IDs)
   for (const id of Object.keys(records)) {
     if (!liveTabIds.has(Number(id))) {
       delete records[Number(id)];
@@ -147,30 +143,42 @@ async function seedExistingTabs(): Promise<void> {
 // ─── Alarm: periodic check ───────────────────────────────────────────
 async function setupAlarm(): Promise<void> {
   const settings = await getSettings();
+
+  // Always clear existing alarm first
+  chrome.alarms.clear(ALARM_NAME);
+
+  if (settings.mode === "off") {
+    // No alarm when off
+    return;
+  }
+
   chrome.alarms.create(ALARM_NAME, {
     delayInMinutes: settings.checkIntervalMinutes,
     periodInMinutes: settings.checkIntervalMinutes,
   });
 }
 
+// ─── Lifecycle ───────────────────────────────────────────────────────
 chrome.runtime.onInstalled.addListener(async () => {
   await seedExistingTabs();
   await setupAlarm();
-  // Run initial check so any already-stale tabs show up
   await checkInactiveTabs();
 });
 
 chrome.runtime.onStartup.addListener(async () => {
-  // Build URL cache from previous session records BEFORE tabs restore events fire
+  const settings = await getSettings();
+  if (settings.mode === "off") {
+    await setupAlarm(); // no-op, just ensures alarm is cleared
+    return;
+  }
+
   await buildStartupUrlCache();
   startupGracePeriod = true;
   await setupAlarm();
 
-  // Wait for tabs to restore, then reconcile and check
   setTimeout(async () => {
     await seedExistingTabs();
     await checkInactiveTabs();
-    // End grace period — from now on, tab activations are genuine user activity
     startupGracePeriod = false;
     startupUrlCache = null;
   }, 5000);
@@ -181,46 +189,46 @@ chrome.alarms.onAlarm.addListener(async (alarm) => {
   await checkInactiveTabs();
 });
 
-// ─── Core logic: find & close inactive tabs ──────────────────────────
+// ─── Core logic: find inactive tabs ──────────────────────────────────
 async function checkInactiveTabs(): Promise<void> {
   const settings = await getSettings();
+  if (settings.mode === "off") {
+    // Clear any stale badge / pending data
+    chrome.action.setBadgeText({ text: "" });
+    await chrome.storage.local.remove("arc_pending_closures");
+    return;
+  }
+
   const inactivityMs = settings.inactivityMinutes * 60 * 1000;
   const now = Date.now();
   const records = await getTabRecords();
   const keepList = await getKeepList();
 
-  // Get current live tabs
   const liveTabs = await chrome.tabs.query({});
   const liveTabIds = new Set(liveTabs.map((t) => t.id));
   const pinnedTabIds = new Set(liveTabs.filter((t) => t.pinned).map((t) => t.id));
 
-  // Group inactive tabs by domain
   const inactiveByDomain: Record<string, TabRecord[]> = {};
   const toRemoveIds: number[] = [];
 
   for (const [id, record] of Object.entries(records)) {
     const tabId = Number(id);
 
-    // Skip if tab no longer exists
     if (!liveTabIds.has(tabId)) {
       toRemoveIds.push(tabId);
       continue;
     }
 
-    // Skip pinned tabs — they should never be auto-closed
     if (pinnedTabIds.has(tabId)) {
       record.lastActive = now;
       continue;
     }
 
-    // Skip if domain is in keep list
     if (keepList[record.domain]) {
-      // Update lastActive so it doesn't stay stale
       record.lastActive = now;
       continue;
     }
 
-    // Check inactivity
     const inactiveFor = now - record.lastActive;
     if (inactiveFor >= inactivityMs) {
       if (!inactiveByDomain[record.domain]) {
@@ -230,14 +238,41 @@ async function checkInactiveTabs(): Promise<void> {
     }
   }
 
-  // Clean up stale records
   for (const id of toRemoveIds) {
     delete records[id];
   }
   await saveTabRecords(records);
 
-  // If there are inactive tabs, store them for popup
   const totalInactive = Object.values(inactiveByDomain).flat().length;
+
+  // ── Auto mode: close inactive tabs automatically ──────────────────
+  if (settings.mode === "auto" && totalInactive > 0) {
+    const tabIdsToClose = Object.values(inactiveByDomain)
+      .flat()
+      .map((t) => t.tabId);
+
+    for (const tabId of tabIdsToClose) {
+      try {
+        await chrome.tabs.remove(tabId);
+      } catch {
+        // already closed
+      }
+    }
+
+    // Clean up records for closed tabs
+    const updatedRecords = await getTabRecords();
+    for (const tabId of tabIdsToClose) {
+      delete updatedRecords[tabId];
+    }
+    await saveTabRecords(updatedRecords);
+
+    // Clear badge and pending — tabs are gone
+    chrome.action.setBadgeText({ text: "" });
+    await chrome.storage.local.remove("arc_pending_closures");
+    return;
+  }
+
+  // ── Manual mode: store for popup review ────────────────────────────
   if (totalInactive > 0) {
     await chrome.storage.local.set({ arc_pending_closures: inactiveByDomain });
     chrome.action.setBadgeText({ text: String(totalInactive) });
@@ -283,9 +318,7 @@ chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
     } else if (message.type === "SAVE_SETTINGS") {
       const newSettings: ArcSettings = message.settings;
       await saveSettings(newSettings);
-      // Recreate alarm with new interval
       await setupAlarm();
-      // Re-check with new threshold
       await checkInactiveTabs();
       sendResponse({ ok: true });
     } else if (message.type === "KEEP_DOMAIN") {
@@ -293,7 +326,6 @@ chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
       keepList[message.domain] = true;
       await chrome.storage.local.set({ [STORAGE_KEY_KEEP]: keepList });
 
-      // Update lastActive for all tabs of this domain & remove from pending
       const records = await getTabRecords();
       const now = Date.now();
       const keptTabIds: number[] = [];
@@ -320,17 +352,14 @@ chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
           // already closed
         }
       }
-      // Clean up records
       const records = await getTabRecords();
       for (const tabId of tabIds) {
         delete records[tabId];
       }
       await saveTabRecords(records);
-      // Remove only these tabs from pending (keeps others)
       await removeTabsFromPending(tabIds);
       sendResponse({ ok: true });
     } else if (message.type === "SNOOZE_TABS") {
-      // Reset lastActive for snoozed tabs
       const tabIds: number[] = message.tabIds;
       const records = await getTabRecords();
       const now = Date.now();
@@ -340,7 +369,6 @@ chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
         }
       }
       await saveTabRecords(records);
-      // Remove only these tabs from pending (keeps others)
       await removeTabsFromPending(tabIds);
       sendResponse({ ok: true });
     } else if (message.type === "GET_KEEP_LIST") {
@@ -355,5 +383,5 @@ chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
     }
   })();
 
-  return true; // keep channel open for async
+  return true;
 });
