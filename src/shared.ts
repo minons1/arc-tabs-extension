@@ -75,6 +75,7 @@ export function isChromeUrl(url: string): boolean {
     url.startsWith("chrome://") ||
     url.startsWith("chrome-extension://") ||
     url.startsWith("brave://") ||
+    url.startsWith("edge://") ||
     url.startsWith("about:")
   );
 }

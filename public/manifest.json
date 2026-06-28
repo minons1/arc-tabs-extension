@@ -1,8 +1,8 @@
 {
   "manifest_version": 3,
   "name": "Arc Tabs",
-  "version": "0.2.0",
-  "description": "Auto-close inactive tabs after 12 hours — like Arc browser, with domain keep-list",
+  "version": "0.2.2",
+  "description": "Manage inactive tabs with smart tracking, domain protection, and auto-close — for Chromium browsers",
   "permissions": [
     "tabs",
     "storage",

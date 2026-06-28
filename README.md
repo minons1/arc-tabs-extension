@@ -1,44 +1,62 @@
 # Arc Tabs 🌀
 
-A Chrome/Brave extension that automatically closes tabs after 12 hours of inactivity — inspired by Arc browser's tab auto-archiving.
+A Chromium extension that automatically manages inactive tabs — inspired by Arc browser's tab auto-archiving.
+
+Works with Chrome, Brave, Edge, Vivaldi, and any Chromium-based browser.
 
 ## Features
 
-- **Auto-close inactive tabs** — Tabs inactive for 12+ hours are flagged for closure
+- **Three operating modes** — Off (disabled), Manual (review & close yourself), Auto (closes stale tabs on browser startup)
+- **Smart inactivity tracking** — Monitors tab focus and navigation; survives browser restarts with cross-session timestamp inheritance
 - **Domain protection** — Keep specific domains open forever (e.g. `github.com`, `gmail.com`)
-- **Confirmation popup** — See all inactive tabs grouped by domain, choose what to keep or close
-- **Snooze** — Reset the inactivity timer for tabs you're not ready to close
-- **Badge indicator** — Red badge shows count of pending closures
-- **Brave compatible** — Works with "Continue where you left off" setting
+- **Per-domain actions** — 🛡️ Keep (protect domain), ⏸ Snooze (reset timer), ✕ Close
+- **Bulk actions** — Close All / Snooze All inactive tabs at once
+- **Configurable thresholds** — Inactivity period (30 min – 48 hours) and check interval (1 – 60 min)
+- **Accent color picker** — 6 pastel themes (Violet, Rose, Sky, Mint, Peach, Coral)
+- **Pinned tab safety** — Pinned tabs are never tracked or closed
+- **Badge indicator** — Extension icon shows count of pending closures
+- **"Continue where you left off"** compatible — Works seamlessly with session restore
 
 ## Install
 
-1. Run `npm run build`
-2. Open `brave://extensions` (or `chrome://extensions`)
+1. Run `pnpm build`
+2. Open `chrome://extensions` (or `brave://extensions`, `edge://extensions`, etc.)
 3. Enable **Developer mode**
 4. Click **Load unpacked** → select the `dist/` folder
 
 ## Dev
 
 ```bash
-npm install
-npm run dev    # watch mode — rebuild on changes
-npm run build  # production build
+pnpm install
+pnpm dev    # watch mode — rebuild on changes
+pnpm build  # production build
 ```
 
 ## How it works
 
-1. **Background service worker** tracks tab activity (focus, navigation) with timestamps
-2. Every **5 minutes**, an alarm checks for tabs inactive 12+ hours
-3. Inactive tabs are grouped by domain and stored as "pending closures"
-4. A **red badge** appears on the extension icon with the count
-5. Click the icon to open the popup:
-   - See all inactive tabs grouped by domain
-   - **🛡️ Keep** — Protect a domain from ever being auto-closed
-   - **⏸ Snooze** — Reset the timer for that domain's tabs
-   - **✕ Close** — Close all tabs for that domain
-   - **Close All / Snooze All** — Bulk actions
-6. Protected domains are managed in the **Protected Domains** section
+### Tab tracking
+
+The background service worker monitors tab activity (focus, navigation) and records timestamps. Every **5 minutes** (configurable), an alarm checks for tabs inactive beyond the threshold (default: 12 hours). Inactive tabs are grouped by domain and stored as "pending closures", and a red badge appears on the extension icon.
+
+### Operating modes
+
+| Mode | Behavior |
+|------|----------|
+| **Off** | Extension is disabled — no tracking, no badge |
+| **Manual** | Inactive tabs are flagged and shown in the popup for you to review and close |
+| **Auto** | Same as Manual during a session, but stale tabs are **auto-closed on browser startup** |
+
+### Popup UI
+
+Click the extension icon to open the popup:
+
+- **Tabs view** — See all inactive tabs grouped by domain with expand/collapse for individual tab titles
+- **Protected view** — Manage your protected domains (never auto-closed)
+- **Settings** — Inactivity threshold, check interval, accent color
+
+### Session persistence
+
+On browser restart, restored tabs inherit their real `lastActive` timestamp from the previous session (matched by URL), so tabs that were idle before closing are still flagged as inactive. An immediate check runs 5 seconds after startup to catch stale tabs right away.
 
 ## Project structure
 
@@ -52,6 +70,10 @@ src/
     ├── main.ts        # Popup logic
     └── style.css      # Dark theme styles
 public/
-├── manifest.json      # Chrome extension manifest v3
+├── manifest.json      # Chromium extension manifest v3
 └── icons/             # Extension icons
 ```
+
+## License
+
+MIT

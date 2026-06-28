@@ -2,6 +2,11 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.2.2] - 2026-06-28
+### Added
+
+- **Docs** — Added `README.md` and `AGENTS.md` for developer reference, including installation instructions, architecture overview, and message protocol details
+
 ## [0.2.1] - 2026-06-28
 
 ### Fixed
