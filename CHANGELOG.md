@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.2.1] - 2026-06-28
+
+### Fixed
+
+- **Mode indicator centering** — the sliding indicator in the mode toggle now positions itself based on actual segment dimensions instead of assuming equal thirds, fixing the "Manual" text appearing off-center within the indicator
+
 ## [0.2.0] - 2026-06-27
 
 ### Added

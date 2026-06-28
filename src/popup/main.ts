@@ -49,6 +49,15 @@ function renderModeToggle(mode: OperatingMode) {
   const pos = MODE_ORDER.indexOf(mode);
   modeIndicator.dataset.pos = String(pos);
 
+  // Position indicator based on actual segment dimensions
+  const activeSeg = modeSegments[pos];
+  if (activeSeg) {
+    const toggleRect = modeToggle.getBoundingClientRect();
+    const segRect = activeSeg.getBoundingClientRect();
+    modeIndicator.style.left = `${segRect.left - toggleRect.left}px`;
+    modeIndicator.style.width = `${segRect.width}px`;
+  }
+
   modeSegments.forEach((seg) => {
     const segMode = seg.dataset.mode as OperatingMode;
     seg.classList.remove("active-off", "active-manual", "active-auto");
