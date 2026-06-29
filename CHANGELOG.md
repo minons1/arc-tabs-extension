@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.2.3] - 2026-06-29
+### Added
+
+- **Chrome Web Store assets** — promotional tiles (1320×720, 440×280) and 3 polished screenshots (1280×800) for store listing
+- **Privacy disclosures** added for Chrome Web Store — all data stored locally via `chrome.storage.local`, no remote data collection, no third-party sharing, no analytics
+
 ## [0.2.2] - 2026-06-28
 ### Added
 

@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "Arc Tabs",
-  "version": "0.2.2",
+  "version": "0.2.3",
   "description": "Manage inactive tabs with smart tracking, domain protection, and auto-close — for Chromium browsers",
   "permissions": [
     "tabs",
