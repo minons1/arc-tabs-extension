@@ -4,6 +4,9 @@ A Chromium extension that automatically manages inactive tabs — inspired by Ar
 
 Works with Chrome, Brave, Edge, Vivaldi, and any Chromium-based browser.
 
+[![Chrome Web Store](https://img.shields.io/badge/Chrome_Web_Store-Arc_Tabs-4285F4?style=for-the-badge&logo=googlechrome&logoColor=white)](https://chromewebstore.google.com/detail/arc-tabs/eocncikkgmebembbbjndnohgckjeinbb)
+
+
 ## Features
 
 - **Three operating modes** — Off (disabled), Manual (review & close yourself), Auto (closes stale tabs on browser startup)
@@ -18,6 +21,12 @@ Works with Chrome, Brave, Edge, Vivaldi, and any Chromium-based browser.
 - **"Continue where you left off"** compatible — Works seamlessly with session restore
 
 ## Install
+
+**From the Chrome Web Store** (recommended):
+
+👉 [Install Arc Tabs](https://chromewebstore.google.com/detail/arc-tabs/eocncikkgmebembbbjndnohgckjeinbb)
+
+**Manual install (from source):**
 
 1. Run `pnpm build`
 2. Open `chrome://extensions` (or `brave://extensions`, `edge://extensions`, etc.)
